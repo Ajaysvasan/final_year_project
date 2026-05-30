@@ -1,4 +1,5 @@
 import os
+from pathlib import Path
 
 
 class Config:
@@ -8,6 +9,7 @@ class Config:
     """
 
     APP_NAME = "Final Year Project Backend"
+    DATASET_PATH = Path("dataset").resolve().parent / "dataset"
     DEBUG = False
     LOG_FILE = "log/app.log"
     ABS_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))

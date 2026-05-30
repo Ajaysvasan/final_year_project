@@ -5,3 +5,7 @@ pydantic
 rich 
 typer
 python-dotenv
+pathlib
+python-docx
+textract
+pyPDF2
