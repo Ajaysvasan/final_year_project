@@ -1,28 +1,22 @@
-"""
-Main entry point for the final year project backend CLI application.
-This template handles setup, configuration, logging, argument parsing, 
-and executes the command-line interface.
-"""
-
 import argparse
 import logging
 import os
 import sys
 
-# Ensure the root directory is in the Python path
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from app.config import Config
-from CLI.cli_interface import cli_interface
+from cli.cli_interface import cli_interface
 
-# Configure logging
 logging.basicConfig(
     level=logging.INFO,
     format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
     handlers=[
         logging.StreamHandler(sys.stdout),
-        # logging.FileHandler(Config.LOG_FILE, encoding="utf-8") # Uncomment to log to a file
-    ]
+        logging.FileHandler(
+            Config.LOG_FILE, encoding="utf-8"
+        ),  # Uncomment to log to a file
+    ],
 )
 logger = logging.getLogger("backend_main")
 
@@ -35,14 +29,10 @@ def parse_arguments():
         description="Final Year Project Backend - Command Line Interface"
     )
     parser.add_argument(
-        "--query", "-q",
-        type=str,
-        help="Run a single query directly and exit"
+        "--query", "-q", type=str, help="Run a single query directly and exit"
     )
     parser.add_argument(
-        "--verbose", "-v",
-        action="store_true",
-        help="Enable verbose debug logging"
+        "--verbose", "-v", action="store_true", help="Enable verbose debug logging"
     )
     return parser.parse_args()
 
