@@ -71,6 +71,15 @@ class TextExtractor:
             print(f"Error reading {file_path}: {e}")
             return ""
 
+    def __extract_text_from_md(self, file_path: str) -> str:
+        if not os.path.exists(file_path):
+            raise Exception(f"The Path {file_path} does not exists")
+        text = []
+        with open(file_path, "r", encoding="utf-8") as file:
+            text = file.readlines()
+
+        return "\n".join(text)
+
     def extract_text_from_file(self, file_path: str) -> str:
         if not os.path.exists(file_path):
             print(f"Error: File does not exist: {file_path}")
@@ -86,6 +95,8 @@ class TextExtractor:
             return self._extract_from_doc(file_path)
         elif extension == ".pdf":
             return self._extract_from_pdf(file_path)
+        elif extension == ".md":
+            return self.__extract_text_from_md(file_path)
         else:
             print(f"Unsupported file type: {extension}")
             return ""
@@ -105,7 +116,8 @@ class TextExtractor:
 if __name__ == "__main__":
     from file_loader import FileLoader
 
-    data_path = str("/home/ajay/Documents/final_year_project/backend/app/dataset/")
+    # to test chnage the directory to test
+    data_path = str("folder/path")
     file_loader = FileLoader(data_path)
     loaded_files = file_loader.load_files()
 
