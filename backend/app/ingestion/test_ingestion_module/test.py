@@ -2,7 +2,6 @@ import os
 import sys
 
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
-from config import config
 from ingestion.TextFileProcessor.file_loader import FileLoader
 from ingestion.TextFileProcessor.text_extractor import TextExtractor
 
