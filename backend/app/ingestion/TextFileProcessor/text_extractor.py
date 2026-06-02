@@ -105,6 +105,7 @@ class TextExtractor:
         extracted_texts = {}
 
         for category, file_paths in loaded_files.items():
+            print(category)
             for file_path in file_paths:
                 print(f"Processing: {file_path}")
                 text = self.extract_text_from_file(file_path)

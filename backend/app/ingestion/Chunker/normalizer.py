@@ -1,5 +1,8 @@
+import hashlib
 import re
-from typing import Dict
+from datetime import datetime, timezone
+from pathlib import Path
+from typing import Dict, List
 
 NORMALIZATION_VERSION = "rag_v1"
 
@@ -26,6 +29,11 @@ class TextNormalizer:
         self.remove_emails = remove_emails
         self.remove_newlines = remove_newlines
         self.strip_whitespace = strip_whitespace
+
+    def __generate_document_id(self, normalized_text: str) -> str:
+        hash_object = hashlib.sha256(normalized_text.encode("utf-8"))
+        hex_digest = hash_object.hexdigest()
+        return str(hex_digest)
 
     def _replace_urls(self, text: str, placeholder: str = "[URL]") -> str:
         url_pattern = r"http[s]?://(?:[a-zA-Z]|[0-9]|[$-_@.&+]|[!*\\(\\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+"
@@ -88,13 +96,37 @@ class TextNormalizer:
 
         return text
 
-    def normalize_all(self, extracted_texts: Dict[str, str]) -> Dict[str, str]:
-        normalized_texts = {}
+    def normalize_all(self, extracted_texts: Dict[str, str]) -> List[Dict]:
+        normalized_texts = []
 
+        """The type of output that I want
+            documentid : {content : normalized_text,
+            metadata : {
+                document_id: 
+                source_file : file_path
+                file_type :
+                ingestion_time:
+            }
+            }
+        """
         for file_path, text in extracted_texts.items():
             print(f"Normalizing: {file_path}")
+            file_type = Path(file_path).suffix.lower()
+            ingestion_time = datetime.now(timezone.utc).isoformat()
             normalized_text = self.normalize_text(text)
-            normalized_texts[file_path] = normalized_text
+            document_id = self.__generate_document_id(normalized_text)
+            processed_file_information = {
+                "content": normalized_text,
+                "metadata": {
+                    "document_id": document_id,
+                    "source_file": file_path,
+                    "file_type": file_type,
+                    "ingestion_time": ingestion_time,
+                    "normalization_version": NORMALIZATION_VERSION,
+                    "content_hash": document_id,
+                },
+            }
+            normalized_texts.append(processed_file_information)
 
         return normalized_texts
 

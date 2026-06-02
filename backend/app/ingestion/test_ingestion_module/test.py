@@ -37,10 +37,14 @@ extracted_texts = extractor.extract_all(loaded_files)
 normalizer = NormalizationProfiles.rag_ingestion()
 normalized_texts = normalizer.normalize_all(extracted_texts)
 
-for file_path, text in normalized_texts.items():
-    print(f"File: {file_path}")
-    print(f"Text length: {len(text)} characters")
-    print(f"Preview: {text[:200]}...")
+i = 0
+
+for document in normalized_texts:
+    i += 1
+    print(document)
+    if i == 10:
+        break
+
 
 sample_text = (
     "Contact us at support@example.com or visit https://example.com.\n\n"
