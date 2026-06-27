@@ -1,0 +1,2 @@
+class HierarchialChunkManger:
+    pass
