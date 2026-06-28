@@ -9,3 +9,4 @@ pathlib
 python-docx
 textract
 pyPDF2
+sqlite3

@@ -4,6 +4,7 @@ import sys
 sys.path.append(os.path.abspath(os.path.join(os.path.dirname(__file__), "..", "..")))
 from pathlib import Path
 
+from ingestion.Chunker.DB_Manager import Manager
 from ingestion.Chunker.HierarchicalChunker import HierarchicalChunker
 from ingestion.Chunker.normalizer import NORMALIZATION_VERSION, NormalizationProfiles
 from ingestion.TextFileProcessor.file_loader import FileLoader
@@ -74,3 +75,4 @@ print(section.chunk_text())
 # )
 # print(f"\nOriginal:\n{sample_text}")
 # print(f"\nNormalized:\n{normalizer.normalize_text(sample_text)}")
+manager = Manager("HierarchicalChunkerDb.db", is_chunker_type_hierarchical=True)
