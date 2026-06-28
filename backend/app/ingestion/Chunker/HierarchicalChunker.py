@@ -12,6 +12,12 @@ from .DB_Manager import Manager
 
 
 @dataclass(frozen=True)
+class Document:
+    documentId: str
+    documentName: str
+
+
+@dataclass(frozen=True)
 class Section:
     sectionId: str
     documentId: str
@@ -29,7 +35,7 @@ class Context:
     contextId: str
     sectionId: str
 
-    content: str
+    context: str
     contextLen: int
 
     startOffSet: int
@@ -73,7 +79,7 @@ class HierarchicalChunker:
         hex_digest = hash_object.hexdigest()
         return str(hex_digest)
 
-    def __find_sections(self):
+    def __find_sections(self, doc: Document):
 
         sections: List[Section] = []
         pattern = re.compile(r"^[A-Z\s]+$", re.MULTILINE)
@@ -93,7 +99,7 @@ class HierarchicalChunker:
             content = self.normalizedText[contentStart:contentEnd].strip()
             sectionObj = Section(
                 sectionId,
-                self.documentId,
+                doc.documentId,
                 sectionName,
                 content,
                 len(content),
@@ -102,6 +108,9 @@ class HierarchicalChunker:
             )
             sections.append(sectionObj)
         return sections
+
+    def __make_document_obj(self):
+        return Document(self.documentId, self.documentName)
 
     def __find_contexts(self, sections: List[Section]) -> List[Context]:
         contexts: List[Context] = []
@@ -122,7 +131,7 @@ class HierarchicalChunker:
                     contextObj = Context(
                         contextId=contextId,
                         sectionId=section.sectionId,
-                        content=context_text,
+                        context=context_text,
                         contextLen=len(context_text),
                         startOffSet=start_idx,
                         endOffSet=end_idx,
@@ -140,7 +149,7 @@ class HierarchicalChunker:
                     contextObj = Context(
                         contextId=contextId,
                         sectionId=section.sectionId,
-                        content=context_text,
+                        context=context_text,
                         contextLen=len(context_text),
                         startOffSet=start_idx,
                         endOffSet=len(content),
@@ -158,9 +167,9 @@ class HierarchicalChunker:
 
         for context in contexts:
             start = 0
-            while start < len(context.content):
-                end = min(start + self.chunkSize, len(context.content))
-                chunk = context.content[start:end]
+            while start < len(context.context):
+                end = min(start + self.chunkSize, len(context.context))
+                chunk = context.context[start:end]
                 chunkId = self.__generate_id(chunk)
                 chunkObj = Chunk(chunkId, context.contextId, chunk, start, end)
                 start += self.chunkSize - self.chunkOverlap
@@ -168,7 +177,8 @@ class HierarchicalChunker:
         return chunks
 
     def chunk_text(self):
-        sections = self.__find_sections()
+        doc = self.__make_document_obj()
+        sections = self.__find_sections(doc)
         contexts = self.__find_contexts(sections)
         chunks = self.__get_chunks(contexts)
         return chunks

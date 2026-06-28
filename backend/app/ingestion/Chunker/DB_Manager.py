@@ -1,6 +1,19 @@
 import sqlite3
 from typing import List
 
+from .HierarchicalChunker import Chunk, Context, Document, Section
+
+
+class InsertionError(Exception):
+    def __init__(self, error, tableName, id) -> None:
+        self.error = error
+        self.message = tableName
+        self.id = id
+        super().__init__(self.error)
+
+    def __str__(self):
+        return f"{self.error}:Error occured while inserting values in the following table {self.message} , for the id : {self.id}"
+
 
 class Manager:
     def __init__(self, db_path: str, is_chunker_type_hierarchical: bool) -> None:
@@ -21,12 +34,12 @@ class Manager:
 
     def __create_section_htable(self):
         sectionTableQuery = """
-            CREATE TABLE IF NOT EXISTS Section(
+            CREATE TABLE IF NOT EXISTS Sections(
                 sectionId TEXT PRIMARY KEY, 
                 documentId TEXT, 
                 sectionName TEXT,
                 content TEXT NOT NULL,
-                content_length INTEGER NOT NULL,
+                contentLength INTEGER NOT NULL,
                 startoffset int not null,
                 endoffset int not null,
                 FOREIGN KEY (documentId) REFERENCES Documents(documentId)
@@ -36,27 +49,27 @@ class Manager:
 
     def __create_context_htable(self):
         contextTableQuery = """
-            CREATE TABLE IF NOT EXISTS Context(
+            CREATE TABLE IF NOT EXISTS Contexts(
                 contextId TEXT PRIMARY KEY,
                 sectionId TEXT , 
-                content TEXT not null,
-                content_length int not null,
+                context TEXT not null,
+                contextLength int not null,
                 startoffset int not null,
                 endoffset int not null,
-                FOREIGN KEY (sectionId) REFERENCES Section(sectionId)
+                FOREIGN KEY (sectionId) REFERENCES Sections(sectionId)
             )
         """
         self.cursor.execute(contextTableQuery)
 
     def __create_chunk_htable(self):
         chunkTableQuery = """
-            CREATE TABLE IF NOT EXISTS Chunk(
+            CREATE TABLE IF NOT EXISTS Chunks(
                 chunkId TEXT PRIMARY KEY,
                 contextId TEXT,
-                chunks TEXT not null,
+                chunk TEXT not null,
                 startoffset int not null,
                 endoffset int not null,
-                FOREIGN KEY (contextId) REFERENCES Context(contextId)
+                FOREIGN KEY (contextId) REFERENCES Contexts(contextId)
             )
         """
         self.cursor.execute(chunkTableQuery)
@@ -69,18 +82,20 @@ class Manager:
                 self.__create_context_htable()
                 self.__create_chunk_htable()
         except sqlite3.Error as e:
+            self.cursor.close()
+            self.connection.close()
             raise Exception(f"Database setup failed: {e}") from e
 
     def __get_hsection(self, sectionId: str):
         getSectionQuery = """
-            select * from Section where sectionId = ?;
+            select * from Sections where sectionId = ?;
         """
         self.cursor.execute(getSectionQuery, (sectionId,))
         rows = self.cursor.fetchall()
         return rows
 
     def __get_hcontext(self, contextId: str):
-        getContextQuery = """select * from Context where contextId = ?"""
+        getContextQuery = """select * from Contexts where contextId = ?"""
         self.cursor.execute(getContextQuery, (contextId,))
         rows = self.cursor.fetchall()
         return rows
@@ -92,10 +107,69 @@ class Manager:
         return rows
 
     def __get_hchunk(self, chunkId: str):
-        getChunkQuery = """select * from Chunk where chunkId = ?"""
+        getChunkQuery = """select * from Chunks where chunkId = ?"""
         self.cursor.execute(getChunkQuery, (chunkId,))
         rows = self.cursor.fetchall()
         return rows
+
+    def __insert_hchunk(self, ChunkObj: Chunk):
+        chunkId = ChunkObj.chunkId
+        contextId = ChunkObj.contextId
+        chunk = ChunkObj.chunk
+        startoffset = ChunkObj.startOffSet
+        endoffset = ChunkObj.endOffSet
+        insertChunkQuery = """insert into Chunks (chunkId , contextId , chunk , startoffset , endoffset) values (? ,? ,?, ?, ? )"""
+        self.cursor.execute(
+            insertChunkQuery, (chunkId, contextId, chunk, startoffset, endoffset)
+        )
+
+    def __insert_hsection(self, SectionObj: Section):
+        sectionId = SectionObj.sectionId
+        documentId = SectionObj.documentId
+
+        sectionName = SectionObj.sectionName
+        content = SectionObj.content
+        contentLength = SectionObj.contentLength
+
+        startoffset = SectionObj.startOffSet
+        endoffset = SectionObj.endOffSet
+
+        insertSectionQuery = """insert into Sections (sectionId , documentId , sectionName , content , contentLength , startoffset ,endoffset) values (? ,? , ?, ? ,? ,? , ? )"""
+        self.cursor.execute(
+            insertSectionQuery,
+            (
+                sectionId,
+                documentId,
+                sectionName,
+                content,
+                contentLength,
+                startoffset,
+                endoffset,
+            ),
+        )
+
+    def __insert_hdocument(self, DocumentObj: Document):
+        documentName = DocumentObj.documentName
+        documentId = DocumentObj.documentId
+        insertDocumentQuery = (
+            """insert into Documents (documentId , documentName) values (? ,  ?)"""
+        )
+        self.cursor.execute(insertDocumentQuery, (documentId, documentName))
+
+    def __insert_hcontext(self, ContextObj: Context):
+        contextId = ContextObj.contextId
+        sectionId = ContextObj.sectionId
+
+        context = ContextObj.context
+        contextLength = ContextObj.contextLen
+
+        startoffset = ContextObj.startOffSet
+        endoffset = ContextObj.endOffSet
+        insertContextQuery = """insert into Contexts (contextId , sectionId , context , contextLength , startoffset , endoffset) values(? , ? , ? , ? , ? , ? )"""
+        self.cursor.execute(
+            insertContextQuery,
+            (contextId, sectionId, context, contextLength, startoffset, endoffset),
+        )
 
     def get_section_from_context(self, sectionId: str):
         return self.__get_hsection(sectionId)
@@ -108,3 +182,56 @@ class Manager:
 
     def get_document_from_section(self, documentId: str):
         return self.__get_hdocument(documentId)
+
+    def insert_chunks(self, Chunks: List[Chunk]):
+        try:
+            self.cursor.execute("BEGIN IMMEDIATE;")
+            currentChunkId: str
+            for ChunkObj in Chunks:
+                currentChunkId = ChunkObj.chunkId
+                self.__insert_hchunk(ChunkObj)
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise InsertionError(e, "Chunks", currentChunkId)
+
+    def insert_contexts(self, Contexts: List[Context]):
+        try:
+            self.cursor.execute("BEGIN IMMEDIATE;")
+            currentContextId: str
+            for ContextObj in Contexts:
+                currentContextId = ContextObj.contextId
+                self.__insert_hcontext(ContextObj)
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise InsertionError(e, "Context", currentContextId)
+
+    def insert_documents(self, Documents: List[Document]):
+        try:
+            self.cursor.execute("BEGIN IMMEDIATE;")
+            currentDocId: str
+            for DocumentObj in Documents:
+                currentDocId = DocumentObj.documentId
+                self.__insert_hdocument(DocumentObj)
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise InsertionError(e, "Documents", currentDocId)
+
+    def insert_sections(self, Sections: List[Section]):
+
+        try:
+            self.cursor.execute("BEGIN IMMEDIATE;")
+            currentSectionId: str
+            for SectionObj in Sections:
+                currentSectionId = SectionObj.sectionId
+                self.__insert_hsection(SectionObj)
+            self.connection.commit()
+        except Exception as e:
+            self.connection.rollback()
+            raise InsertionError(e, "Section", currentSectionId)
+
+    def __del__(self):
+        self.cursor.close()
+        self.connection.close()
