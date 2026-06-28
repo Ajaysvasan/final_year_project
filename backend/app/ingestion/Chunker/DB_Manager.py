@@ -1,4 +1,5 @@
 import sqlite3
+from typing import List
 
 
 class Manager:
@@ -23,6 +24,7 @@ class Manager:
             CREATE TABLE IF NOT EXISTS Section(
                 sectionId TEXT PRIMARY KEY, 
                 documentId TEXT, 
+                sectionName TEXT,
                 content TEXT NOT NULL,
                 content_length INTEGER NOT NULL,
                 startoffset int not null,
@@ -68,3 +70,41 @@ class Manager:
                 self.__create_chunk_htable()
         except sqlite3.Error as e:
             raise Exception(f"Database setup failed: {e}") from e
+
+    def __get_hsection(self, sectionId: str):
+        getSectionQuery = """
+            select * from Section where sectionId = ?;
+        """
+        self.cursor.execute(getSectionQuery, (sectionId,))
+        rows = self.cursor.fetchall()
+        return rows
+
+    def __get_hcontext(self, contextId: str):
+        getContextQuery = """select * from Context where contextId = ?"""
+        self.cursor.execute(getContextQuery, (contextId,))
+        rows = self.cursor.fetchall()
+        return rows
+
+    def __get_hdocument(self, documentId: str):
+        getDocumentQuery = """select * from Documents where documentId = ?"""
+        self.cursor.execute(getDocumentQuery, (documentId,))
+        rows = self.cursor.fetchall()
+        return rows
+
+    def __get_hchunk(self, chunkId: str):
+        getChunkQuery = """select * from Chunk where chunkId = ?"""
+        self.cursor.execute(getChunkQuery, (chunkId,))
+        rows = self.cursor.fetchall()
+        return rows
+
+    def get_section_from_context(self, sectionId: str):
+        return self.__get_hsection(sectionId)
+
+    def get_context_from_chunk(self, contextId: str):
+        return self.__get_hcontext(contextId)
+
+    def get_chunk(self, chunkId: str):
+        return self.__get_hchunk(chunkId)
+
+    def get_document_from_section(self, documentId: str):
+        return self.__get_hdocument(documentId)
