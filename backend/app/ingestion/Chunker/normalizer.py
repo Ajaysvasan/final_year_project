@@ -97,7 +97,7 @@ class TextNormalizer:
         return text
 
     def normalize_all(self, extracted_texts: Dict[str, str]) -> List[Dict]:
-        normalized_texts = []
+        normalized_documents_contents = []
 
         """The type of output that I want
             documentid : {content : normalized_text,
@@ -126,9 +126,9 @@ class TextNormalizer:
                     "content_hash": document_id,
                 },
             }
-            normalized_texts.append(processed_file_information)
+            normalized_documents_contents.append(processed_file_information)
 
-        return normalized_texts
+        return normalized_documents_contents
 
 
 class NormalizationProfiles:

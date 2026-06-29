@@ -3,7 +3,7 @@ import os
 import re
 import sys
 from dataclasses import dataclass
-from typing import List
+from typing import Dict, List
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
@@ -15,6 +15,7 @@ from .DB_Manager import Manager
 class Document:
     documentId: str
     documentName: str
+    normalizedText: str
 
 
 @dataclass(frozen=True)
@@ -63,30 +64,39 @@ class HierarchicalChunker:
     def __init__(
         self,
         chunkOverlap: int,
-        documentName: str,
-        documentId: str,
-        normalizedText: str,
         chunkSize: int,
+        db_path: str,
+        normalizedDocumentsContents: List[Dict],
     ) -> None:
         self.chunkOverlap = chunkOverlap
-        self.documentName = documentName
-        self.documentId = documentId
-        self.normalizedText = normalizedText
         self.chunkSize = chunkSize
+        self.normalizedDocumentsContents = normalizedDocumentsContents
+        self.db_path = db_path
 
-    def __generate_id(self, value):
+    def __generate_id(self, *args):
+        value = "".join(args)
         hash_object = hashlib.sha256(value.encode("utf-8"))
         hex_digest = hash_object.hexdigest()
         return str(hex_digest)
+
+    def __make_document_objs(self):
+        docObjs: List[Document] = []
+        for normalizedDocuments in self.normalizedDocumentsContents:
+            documentName = normalizedDocuments["metadata"]["file_path"]
+            documentId = normalizedDocuments["metadata"]["documentId"]
+            normalizedContent = normalizedDocuments["content"]
+            docObj = Document(documentId, documentName, normalizedContent)
+            docObjs.append(docObj)
+        return docObjs
 
     def __find_sections(self, doc: Document):
 
         sections: List[Section] = []
         pattern = re.compile(r"^[A-Z\s]+$", re.MULTILINE)
-        matches = list(pattern.finditer(self.normalizedText))
+        matches = list(pattern.finditer(doc.normalizedText))
         for i, match in enumerate(matches):
             sectionName = match.group().strip()
-            sectionId = self.__generate_id(sectionName)
+            sectionId = self.__generate_id(sectionName, doc.documentId)
             headerStart = match.start()
             headerEnd = match.end()
             contentStart = headerEnd
@@ -94,23 +104,20 @@ class HierarchicalChunker:
             if i + 1 < len(matches):
                 contentEnd = matches[i + 1].start()
             else:
-                contentEnd = len(self.normalizedText)
+                contentEnd = len(doc.normalizedText)
 
-            content = self.normalizedText[contentStart:contentEnd].strip()
+            content = doc.normalizedText[contentStart:contentEnd].strip()
             sectionObj = Section(
                 sectionId,
                 doc.documentId,
                 sectionName,
                 content,
                 len(content),
-                headerStart,
-                headerEnd,
+                contentStart,
+                contentEnd,
             )
             sections.append(sectionObj)
         return sections
-
-    def __make_document_obj(self):
-        return Document(self.documentId, self.documentName)
 
     def __find_contexts(self, sections: List[Section]) -> List[Context]:
         contexts: List[Context] = []
@@ -127,7 +134,7 @@ class HierarchicalChunker:
                 context_text = content[start_idx:end_idx].strip()
 
                 if context_text:  # Only add if it's not an empty string
-                    contextId = self.__generate_id(context_text)
+                    contextId = self.__generate_id(context_text, section.sectionId)
                     contextObj = Context(
                         contextId=contextId,
                         sectionId=section.sectionId,
@@ -145,7 +152,7 @@ class HierarchicalChunker:
             if start_idx < len(content):
                 context_text = content[start_idx:].strip()
                 if context_text:
-                    contextId = self.__generate_id(context_text)
+                    contextId = self.__generate_id(context_text, section.sectionId)
                     contextObj = Context(
                         contextId=contextId,
                         sectionId=section.sectionId,
@@ -170,15 +177,26 @@ class HierarchicalChunker:
             while start < len(context.context):
                 end = min(start + self.chunkSize, len(context.context))
                 chunk = context.context[start:end]
-                chunkId = self.__generate_id(chunk)
+                chunkId = self.__generate_id(chunk, context.contextId)
                 chunkObj = Chunk(chunkId, context.contextId, chunk, start, end)
                 start += self.chunkSize - self.chunkOverlap
                 chunks.append(chunkObj)
         return chunks
 
-    def chunk_text(self):
-        doc = self.__make_document_obj()
+    def __chunk_text(self, doc: Document, h_manager):
+
         sections = self.__find_sections(doc)
+        h_manager.insert_sections(sections)
         contexts = self.__find_contexts(sections)
+        h_manager.insert_contexts(contexts)
         chunks = self.__get_chunks(contexts)
-        return chunks
+        h_manager.insert_chunks(chunks)
+
+    def process_doc(self):
+        docObjs = self.__make_document_objs()
+        h_manager = Manager(self.db_path, is_chunker_type_hierarchical=True)
+        h_manager.insert_documents(docObjs)
+        for docObj in docObjs:
+            self.__chunk_text(docObj, h_manager)
+
+        h_manager.close()

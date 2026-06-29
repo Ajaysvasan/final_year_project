@@ -15,6 +15,7 @@ class Config:
     ABS_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(ABS_PATH, "data")
     # Add other configurations here (e.g., DB credentials, API keys)
+    DB_PATH = "hierarchical_db"
 
 
 config = Config()

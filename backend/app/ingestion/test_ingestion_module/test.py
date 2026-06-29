@@ -60,14 +60,6 @@ aweonfgowa
 normalized_doc_id = "9032850250-2jefiw"
 # split the file path into path and also get the name
 normalized_doc_name = "testing"
-
-section = HierarchicalChunker(
-    5, normalized_doc_name, normalized_doc_id, normalized_text, 24
-)
-print("The normalized_text is : ")
-print(normalized_text)
-print(section.chunk_text())
-
 # sample_text = (
 #     "Contact us at support@example.com or visit https://example.com.\n\n"
 #     "Our office is at 123 Main St. Price: $99.99\n"

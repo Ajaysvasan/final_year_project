@@ -232,6 +232,6 @@ class Manager:
             self.connection.rollback()
             raise InsertionError(e, "Section", currentSectionId)
 
-    def __del__(self):
+    def close(self):
         self.cursor.close()
         self.connection.close()
