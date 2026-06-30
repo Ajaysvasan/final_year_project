@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List
 
-from .HierarchicalChunker import Chunk, Context, Document, Section
+from .nodes import Chunk, Context, Document, Section
 
 
 class InsertionError(Exception):

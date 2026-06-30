@@ -4,6 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
+from .normalised_content import NormalizedContent
+
 NORMALIZATION_VERSION = "rag_v1"
 
 
@@ -64,6 +66,19 @@ class TextNormalizer:
         text = re.sub(r"(?<!\n)\n(?!\n)", " ", text)
         return text
 
+    def __find_section_names(self, normalizedText):
+
+        sections = []
+        pattern = re.compile(r"^[A-Z\s]+$", re.MULTILINE)
+        matches = list(pattern.finditer(normalizedText))
+        for i, match in enumerate(matches):
+            sectionName = match.group().strip()
+            sections.append(sectionName)
+        return sections
+
+    def _has_section(self, normalizedText):
+        return len(self.__find_section_names(normalizedText)) != 0
+
     def normalize_text(self, text: str) -> str:
         if not text:
             return ""
@@ -96,7 +111,7 @@ class TextNormalizer:
 
         return text
 
-    def normalize_all(self, extracted_texts: Dict[str, str]) -> List[Dict]:
+    def normalize_all(self, extracted_texts: Dict[str, str]) -> List[NormalizedContent]:
         normalized_documents_contents = []
 
         """The type of output that I want
@@ -115,6 +130,7 @@ class TextNormalizer:
             ingestion_time = datetime.now(timezone.utc).isoformat()
             normalized_text = self.normalize_text(text)
             document_id = self.__generate_document_id(normalized_text)
+            has_section = self._has_section(normalized_text)
             processed_file_information = {
                 "content": normalized_text,
                 "metadata": {
@@ -126,7 +142,9 @@ class TextNormalizer:
                     "content_hash": document_id,
                 },
             }
-            normalized_documents_contents.append(processed_file_information)
+            normalized_documents_contents.append(
+                NormalizedContent(processed_file_information, has_section)
+            )
 
         return normalized_documents_contents
 

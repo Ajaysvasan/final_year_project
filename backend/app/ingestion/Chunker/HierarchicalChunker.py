@@ -1,57 +1,9 @@
 import hashlib
-import os
 import re
-import sys
-from dataclasses import dataclass
 from typing import Dict, List
 
-sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
-
-
 from .DB_Manager import Manager
-
-
-@dataclass(frozen=True)
-class Document:
-    documentId: str
-    documentName: str
-    normalizedText: str
-
-
-@dataclass(frozen=True)
-class Section:
-    sectionId: str
-    documentId: str
-
-    sectionName: str
-    content: str
-    contentLength: int
-
-    startOffSet: int
-    endOffSet: int
-
-
-@dataclass(frozen=True)
-class Context:
-    contextId: str
-    sectionId: str
-
-    context: str
-    contextLen: int
-
-    startOffSet: int
-    endOffSet: int
-
-
-@dataclass(frozen=True)
-class Chunk:
-    chunkId: str
-    contextId: str
-
-    chunk: str
-
-    startOffSet: int
-    endOffSet: int
+from .nodes import Chunk, Context, Document, Section
 
 
 class HierarchicalChunker:
@@ -71,6 +23,7 @@ class HierarchicalChunker:
         self.chunkOverlap = chunkOverlap
         self.chunkSize = chunkSize
         self.normalizedDocumentsContents = normalizedDocumentsContents
+
         self.db_path = db_path
 
     def __generate_id(self, *args):
@@ -82,8 +35,8 @@ class HierarchicalChunker:
     def __make_document_objs(self):
         docObjs: List[Document] = []
         for normalizedDocuments in self.normalizedDocumentsContents:
-            documentName = normalizedDocuments["metadata"]["file_path"]
-            documentId = normalizedDocuments["metadata"]["documentId"]
+            documentName = normalizedDocuments["metadata"]["source_file"]
+            documentId = normalizedDocuments["metadata"]["document_id"]
             normalizedContent = normalizedDocuments["content"]
             docObj = Document(documentId, documentName, normalizedContent)
             docObjs.append(docObj)
