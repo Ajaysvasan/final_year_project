@@ -112,23 +112,3 @@ class TextExtractor:
                 extracted_texts[file_path] = text
 
         return extracted_texts
-
-
-if __name__ == "__main__":
-    from file_loader import FileLoader
-
-    # to test chnage the directory to test
-    data_path = str("folder/path")
-    file_loader = FileLoader(data_path)
-    loaded_files = file_loader.load_files()
-
-    print(f"Found files: {loaded_files}")
-    print("\n" + "=" * 50 + "\n")
-
-    extractor = TextExtractor()
-    extracted_texts = extractor.extract_all(loaded_files)
-
-    for file_path, text in extracted_texts.items():
-        print(f"File: {file_path}")
-        print(f"Text length: {len(text)} characters")
-        print(f"Preview: {text[:200]}...")

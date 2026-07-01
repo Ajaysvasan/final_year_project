@@ -2,8 +2,9 @@ import hashlib
 import re
 from typing import Dict, List
 
+from ingestion.nodes import Chunk, Context, Document, Section
+
 from .DB_Manager import Manager
-from .nodes import Chunk, Context, Document, Section
 
 
 class HierarchicalChunker:
@@ -144,12 +145,15 @@ class HierarchicalChunker:
         h_manager.insert_contexts(contexts)
         chunks = self.__get_chunks(contexts)
         h_manager.insert_chunks(chunks)
+        return chunks
 
     def process_doc(self):
         docObjs = self.__make_document_objs()
         h_manager = Manager(self.db_path, is_chunker_type_hierarchical=True)
         h_manager.insert_documents(docObjs)
+        chunks = []
         for docObj in docObjs:
-            self.__chunk_text(docObj, h_manager)
+            chunks.append(self.__chunk_text(docObj, h_manager))
 
         h_manager.close()
+        return chunks

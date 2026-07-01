@@ -14,8 +14,9 @@ class Config:
     LOG_FILE = "log/app.log"
     ABS_PATH = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
     DATA_DIR = os.path.join(ABS_PATH, "data")
-    # Add other configurations here (e.g., DB credentials, API keys)
     DB_PATH = "hierarchical_db"
+    EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
+    MODEL_PATH = None
 
 
 config = Config()

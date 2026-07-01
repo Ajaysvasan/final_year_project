@@ -1,9 +1,9 @@
 from typing import Dict, List, Tuple
 
 from config import Config
+from ingestion.nodes import NormalizedContent
 
 from .HierarchicalChunker import HierarchicalChunker
-from .normalised_content import NormalizedContent
 from .RecursiveChunker import RecursiveChunker
 
 
@@ -13,12 +13,12 @@ class Chunker:
         self.overlap = overlap
         self.db_path = db_path
 
-    #  NO returns as the values are stored in the Db
-    def _call_hierarchical_chunker(self, hierarchical_chunker_list: List[Dict]) -> None:
+    #  No return statement as the values are stored in the Db
+    def _call_hierarchical_chunker(self, hierarchical_chunker_list: List[Dict]):
         hierarchical_chunker = HierarchicalChunker(
             self.chunk_size, self.overlap, self.db_path, hierarchical_chunker_list
         )
-        hierarchical_chunker.process_doc()
+        return hierarchical_chunker.process_doc()
 
     def __call_recursive_chunker(self, recursive_chunker_list: List[Dict]):
         recursive_chunker = RecursiveChunker(
@@ -42,5 +42,5 @@ class Chunker:
         hierarchical_chunker_list, recursive_chunker_list = (
             self.__hierarchical_and_recursive_objects(normalised_content)
         )
-        self._call_hierarchical_chunker(hierarchical_chunker_list)
+        h_chunks = self._call_hierarchical_chunker(hierarchical_chunker_list)
         r_chunks = self.__call_recursive_chunker(recursive_chunker_list)
