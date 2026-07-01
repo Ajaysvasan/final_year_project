@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List
 
-from ingestion.nodes import Context, Document, HChunk, Section
+from ingestion.nodes.nodes import Context, Document, HChunk, Section
 
 
 class InsertionError(Exception):

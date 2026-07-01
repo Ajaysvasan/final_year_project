@@ -3,8 +3,8 @@ from typing import List
 from sentence_transformers import SentenceTransformer
 
 from config import Config
-from ingestion.metadata import EmbeddedChunkMetaData
-from ingestion.nodes import EmbeddedChunk, HChunk, RChunk
+from ingestion.metadata.metadata import EmbeddedChunkMetaData
+from ingestion.nodes.nodes import EmbeddedChunk, HChunk, RChunk
 
 
 class InvalidEmbeddingArgument(Exception):

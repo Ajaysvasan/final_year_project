@@ -1,7 +1,7 @@
 from dataclasses import dataclass
 from typing import List
 
-from ingestion.metadata import (
+from ingestion.metadata.metadata import (
     ChunkMetaData,
     EmbeddedChunkMetaData,
     NormalizedTextMetaData,

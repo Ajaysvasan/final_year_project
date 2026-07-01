@@ -1,8 +1,7 @@
-from os import wait
 from typing import List, Tuple
 
 from config import Config
-from ingestion.nodes import NormalizedContent
+from ingestion.nodes.nodes import NormalizedContent
 
 from .HierarchicalChunker import HierarchicalChunker
 from .RecursiveChunker import RecursiveChunker

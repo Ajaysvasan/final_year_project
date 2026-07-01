@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from ingestion.metadata import NormalizedTextMetaData
-from ingestion.nodes import NormalizedContent
+from ingestion.metadata.metadata import NormalizedTextMetaData
+from ingestion.nodes.nodes import NormalizedContent
 
 NORMALIZATION_VERSION = "rag_v1"
 
