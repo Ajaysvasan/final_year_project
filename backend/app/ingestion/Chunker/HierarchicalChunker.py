@@ -2,7 +2,8 @@ import hashlib
 import re
 from typing import Dict, List
 
-from ingestion.nodes import Chunk, Context, Document, Section
+from ingestion.metadata import ChunkMetaData
+from ingestion.nodes import Context, Document, HChunk, NormalizedContent, Section
 
 from .DB_Manager import Manager
 
@@ -19,7 +20,7 @@ class HierarchicalChunker:
         chunkOverlap: int,
         chunkSize: int,
         db_path: str,
-        normalizedDocumentsContents: List[Dict],
+        normalizedDocumentsContents: List[NormalizedContent],
     ) -> None:
         self.chunkOverlap = chunkOverlap
         self.chunkSize = chunkSize
@@ -36,9 +37,9 @@ class HierarchicalChunker:
     def __make_document_objs(self):
         docObjs: List[Document] = []
         for normalizedDocuments in self.normalizedDocumentsContents:
-            documentName = normalizedDocuments["metadata"]["source_file"]
-            documentId = normalizedDocuments["metadata"]["document_id"]
-            normalizedContent = normalizedDocuments["content"]
+            normalizedContent = normalizedDocuments.content
+            documentName = normalizedDocuments.meta_data.file_name
+            documentId = normalizedDocuments.meta_data.document_id
             docObj = Document(documentId, documentName, normalizedContent)
             docObjs.append(docObj)
         return docObjs
@@ -72,6 +73,12 @@ class HierarchicalChunker:
             )
             sections.append(sectionObj)
         return sections
+
+    def __create_chunk_metadata(self, document: Document):
+        document_name = document.documentName
+        document_id = document.documentId
+        chunk_type = "hierarchical"
+        return ChunkMetaData(document_name, document_id, chunk_type)
 
     def __find_contexts(self, sections: List[Section]) -> List[Context]:
         contexts: List[Context] = []
@@ -118,13 +125,13 @@ class HierarchicalChunker:
                     contexts.append(contextObj)
         return contexts
 
-    def __get_chunks(self, contexts: List[Context]) -> List[Chunk]:
+    def __get_chunks(self, contexts: List[Context], document: Document) -> List[HChunk]:
         if self.chunkOverlap >= self.chunkSize:
             raise ValueError(
                 "Invalid chunk overlap and chunk size. chunkSize must be greater than chunkOverlap"
             )
 
-        chunks: List[Chunk] = []
+        chunks: List[HChunk] = []
 
         for context in contexts:
             start = 0
@@ -132,7 +139,14 @@ class HierarchicalChunker:
                 end = min(start + self.chunkSize, len(context.context))
                 chunk = context.context[start:end]
                 chunkId = self.__generate_id(chunk, context.contextId)
-                chunkObj = Chunk(chunkId, context.contextId, chunk, start, end)
+                chunkObj = HChunk(
+                    chunkId,
+                    context.contextId,
+                    chunk,
+                    start,
+                    end,
+                    self.__create_chunk_metadata(document),
+                )
                 start += self.chunkSize - self.chunkOverlap
                 chunks.append(chunkObj)
         return chunks
@@ -143,7 +157,7 @@ class HierarchicalChunker:
         h_manager.insert_sections(sections)
         contexts = self.__find_contexts(sections)
         h_manager.insert_contexts(contexts)
-        chunks = self.__get_chunks(contexts)
+        chunks = self.__get_chunks(contexts, doc)
         h_manager.insert_chunks(chunks)
         return chunks
 

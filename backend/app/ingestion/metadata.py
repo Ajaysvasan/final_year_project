@@ -5,6 +5,7 @@ from typing import Dict, List, Optional
 @dataclass(frozen=True)
 class NormalizedTextMetaData:
     document_id: str
+    source_file_path: str | None
     file_name: str
     file_type: str
     ingestion_time: str

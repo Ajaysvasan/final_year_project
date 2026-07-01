@@ -1,5 +1,5 @@
 from dataclasses import dataclass
-from typing import Any, Dict, List
+from typing import List
 
 from ingestion.metadata import (
     ChunkMetaData,
@@ -13,7 +13,6 @@ class Document:
     documentId: str
     documentName: str
     normalizedText: str
-    meta_data: None
 
 
 @dataclass(frozen=True)
@@ -28,8 +27,6 @@ class Section:
     startOffSet: int
     endOffSet: int
 
-    meta_data: None
-
 
 @dataclass(frozen=True)
 class Context:
@@ -41,28 +38,35 @@ class Context:
 
     startOffSet: int
     endOffSet: int
-    meta_data: None
 
 
 @dataclass(frozen=True)
-class Chunk:
-    chunkId: str
-    contextId: str
+class HChunk:
+    chunk_id: str
+    context_id: str
 
     chunk: str
 
-    startOffSet: int
-    endOffSet: int
+    start_off_set: int
+    end_off_set: int
     meta_data: ChunkMetaData
 
 
-@dataclass
+@dataclass(frozen=True)
+class RChunk:
+    chunk: str
+    meta_data: ChunkMetaData
+    chunk_id: str
+
+
+@dataclass(frozen=True)
 class NormalizedContent:
+    content: str
     has_section: bool
     meta_data: NormalizedTextMetaData
 
 
 @dataclass(frozen=True)
 class EmbeddedChunk:
-    vector: Any[float]
+    vector: List[float]
     meta_data: EmbeddedChunkMetaData

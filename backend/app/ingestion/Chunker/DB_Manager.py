@@ -1,7 +1,7 @@
 import sqlite3
 from typing import List
 
-from ingestion.nodes import Chunk, Context, Document, Section
+from ingestion.nodes import Context, Document, HChunk, Section
 
 
 class InsertionError(Exception):
@@ -112,12 +112,12 @@ class Manager:
         rows = self.cursor.fetchall()
         return rows
 
-    def __insert_hchunk(self, ChunkObj: Chunk):
-        chunkId = ChunkObj.chunkId
-        contextId = ChunkObj.contextId
+    def __insert_hchunk(self, ChunkObj: HChunk):
+        chunkId = ChunkObj.chunk_id
+        contextId = ChunkObj.context_id
         chunk = ChunkObj.chunk
-        startoffset = ChunkObj.startOffSet
-        endoffset = ChunkObj.endOffSet
+        startoffset = ChunkObj.start_off_set
+        endoffset = ChunkObj.end_off_set
         insertChunkQuery = """insert into Chunks (chunkId , contextId , chunk , startoffset , endoffset) values (? ,? ,?, ?, ? )"""
         self.cursor.execute(
             insertChunkQuery, (chunkId, contextId, chunk, startoffset, endoffset)
@@ -183,12 +183,12 @@ class Manager:
     def get_document_from_section(self, documentId: str):
         return self.__get_hdocument(documentId)
 
-    def insert_chunks(self, Chunks: List[Chunk]):
+    def insert_chunks(self, Chunks: List[HChunk]):
         try:
             self.cursor.execute("BEGIN IMMEDIATE;")
             currentChunkId: str
             for ChunkObj in Chunks:
-                currentChunkId = ChunkObj.chunkId
+                currentChunkId = ChunkObj.chunk_id
                 self.__insert_hchunk(ChunkObj)
             self.connection.commit()
         except Exception as e:

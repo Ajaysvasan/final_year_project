@@ -4,7 +4,7 @@ from sentence_transformers import SentenceTransformer
 
 from config import Config
 from ingestion.metadata import EmbeddedChunkMetaData
-from ingestion.nodes import Chunk, EmbeddedChunk
+from ingestion.nodes import EmbeddedChunk, HChunk, RChunk
 
 
 class InvalidEmbeddingArgument(Exception):
@@ -24,17 +24,19 @@ class EmbeddingManager:
     def __create_meta_data(self, chunk_id: str, chunk: str) -> EmbeddedChunkMetaData:
         return EmbeddedChunkMetaData(chunk_id, chunk, self.model_name)
 
-    def __embed_chunk(self, chunkObj: Chunk) -> EmbeddedChunk:
+    def __embed_chunk(self, chunkObj: HChunk | RChunk) -> EmbeddedChunk:
         chunk = chunkObj.chunk
-        chunk_id = chunkObj.chunkId
+        chunk_id = chunkObj.chunk_id
         embedded_chunk = self.model.encode(chunk)
-        return EmbeddedChunk(embedded_chunk, self.__create_meta_data(chunk_id, chunk))
+        return EmbeddedChunk(
+            embedded_chunk.tolist(), self.__create_meta_data(chunk_id, chunk)
+        )
 
-    def __embed_chunks(self, chunks: List[Chunk]) -> List[EmbeddedChunk]:
+    def __embed_chunks(self, chunks: List[HChunk | RChunk]) -> List[EmbeddedChunk]:
         embedded_chunks: List[EmbeddedChunk] = []
         texts = []
         for chunkObj in chunks:
-            if not isinstance(chunkObj, Chunk):
+            if not isinstance(chunkObj, HChunk | RChunk):
                 raise InvalidEmbeddingArgument(
                     f"The argument passed is of type {type(chunkObj).__name__}. The valid types are Chunk and list"
                 )
@@ -42,14 +44,16 @@ class EmbeddingManager:
         vectors = self.model.encode(texts)
         for chunkObj, vector in zip(chunks, vectors):
             chunk = chunkObj.chunk
-            chunk_id = chunkObj.chunkId
+            chunk_id = chunkObj.chunk_id
             embedded_chunks.append(
-                EmbeddedChunk(vector, self.__create_meta_data(chunk_id, chunk))
+                EmbeddedChunk(vector.tolist(), self.__create_meta_data(chunk_id, chunk))
             )
         return embedded_chunks
 
-    def embed(self, arg: Chunk | List[Chunk]) -> EmbeddedChunk | List[EmbeddedChunk]:
-        if isinstance(arg, Chunk):
+    def embed(
+        self, arg: HChunk | RChunk | List[HChunk | RChunk]
+    ) -> EmbeddedChunk | List[EmbeddedChunk]:
+        if isinstance(arg, HChunk | RChunk):
             return self.__embed_chunk(arg)
         if isinstance(arg, list):
             return self.__embed_chunks(arg)

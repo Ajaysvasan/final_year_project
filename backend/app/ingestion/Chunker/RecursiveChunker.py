@@ -1,10 +1,14 @@
+import hashlib
 from typing import Dict, List
+
+from ingestion.metadata import ChunkMetaData
+from ingestion.nodes import NormalizedContent, RChunk
 
 
 class RecursiveChunker:
     def __init__(
         self,
-        normalized_documents_contents: List[Dict],
+        normalized_documents_contents: List[NormalizedContent],
         chunk_size,
         overlap=20,
         separator=None,
@@ -14,6 +18,23 @@ class RecursiveChunker:
         self.normalized_documents_contents = normalized_documents_contents
         self.default_separators = (
             separator if separator is not None else ["\n\n", "\n", ".", " ", ""]
+        )
+
+    def __make_chunk_meta_data(self, document_name, document_id):
+        return ChunkMetaData(document_name, document_id, "recursive")
+
+    def __make_chunk_id(self, *args):
+
+        value = "".join(args)
+        hash_object = hashlib.sha256(value.encode("utf-8"))
+        hex_digest = hash_object.hexdigest()
+        return str(hex_digest)
+
+    def __make_chunk_obj(self, chunk, document_name, document_id):
+        return RChunk(
+            chunk,
+            self.__make_chunk_meta_data(document_name, document_id),
+            self.__make_chunk_id(chunk, document_name, document_id),
         )
 
     def __r_chunker(self, normalized_content, separators):
@@ -57,33 +78,15 @@ class RecursiveChunker:
             chunks = overlapped
         return chunks
 
-    def recursive_chunker(self) -> List[Dict]:
-        """
-        Output format
-        [
-            {
-                Chunks = [chunk_one , chunk_two , ... , chunk_n]
-                metadata = {
-                    document_name : document_name,
-                    document_id : document_id
-                }
-            }
-        ]
-
-        """
-        chunk_values: List[Dict] = []
+    def recursive_chunker(self) -> List[RChunk]:
+        chunk_values: List[RChunk] = []
         for normalized_document_content in self.normalized_documents_contents:
-            document_id = normalized_document_content["metadata"]["document_id"]
-            document_name = normalized_document_content["metadata"]["source_file"]
-            normalized_content = normalized_document_content["content"]
-            chunks = self.__r_chunker(normalized_content, self.default_separators)
-            chunk_values.append(
-                {
-                    "chunks": chunks,
-                    "metadata": {
-                        "document_name": document_name,
-                        "document_id": document_id,
-                    },
-                }
-            )
+            normalizedContent = normalized_document_content.content
+            documentName = normalized_document_content.meta_data.file_name
+            documentId = normalized_document_content.meta_data.document_id
+            chunks = self.__r_chunker(normalizedContent, self.default_separators)
+            for chunk in chunks:
+                chunk_values.append(
+                    self.__make_chunk_obj(chunk, documentName, documentId)
+                )
         return chunk_values

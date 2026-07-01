@@ -4,6 +4,7 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
+from ingestion.metadata import NormalizedTextMetaData
 from ingestion.nodes import NormalizedContent
 
 NORMALIZATION_VERSION = "rag_v1"
@@ -32,8 +33,14 @@ class TextNormalizer:
         self.remove_newlines = remove_newlines
         self.strip_whitespace = strip_whitespace
 
-    def __generate_document_id(self, normalized_text: str) -> str:
+    def __generate_content_id(self, normalized_text: str) -> str:
         hash_object = hashlib.sha256(normalized_text.encode("utf-8"))
+        hex_digest = hash_object.hexdigest()
+        return str(hex_digest)
+
+    def __generate_document_id(self, *args) -> str:
+        value = "".join(*args)
+        hash_object = hashlib.sha256(value.encode("utf-8"))
         hex_digest = hash_object.hexdigest()
         return str(hex_digest)
 
@@ -111,39 +118,51 @@ class TextNormalizer:
 
         return text
 
+    def __create_normalized_content_meta_data(
+        self,
+        document_id,
+        source_file,
+        file_type,
+        ingestion_time,
+        normalization_version,
+        content_hash,
+    ):
+        file_name = Path(source_file).name
+        return NormalizedTextMetaData(
+            document_id,
+            source_file,
+            file_name,
+            file_type,
+            ingestion_time,
+            normalization_version,
+            content_hash,
+        )
+
     def normalize_all(self, extracted_texts: Dict[str, str]) -> List[NormalizedContent]:
         normalized_documents_contents = []
-
-        """The type of output that I want
-            documentid : {content : normalized_text,
-            metadata : {
-                document_id: 
-                source_file : file_path
-                file_type :
-                ingestion_time:
-            }
-            }
-        """
         for file_path, text in extracted_texts.items():
-            print(f"Normalizing: {file_path}")
+            file_name = Path(file_path).name
             file_type = Path(file_path).suffix.lower()
             ingestion_time = datetime.now(timezone.utc).isoformat()
             normalized_text = self.normalize_text(text)
-            document_id = self.__generate_document_id(normalized_text)
+            document_id = self.__generate_document_id(
+                file_name, file_path, normalized_text
+            )
+            content_id = self.__generate_content_id(normalized_text)
             has_section = self._has_section(normalized_text)
-            processed_file_information = {
-                "content": normalized_text,
-                "metadata": {
-                    "document_id": document_id,
-                    "source_file": file_path,
-                    "file_type": file_type,
-                    "ingestion_time": ingestion_time,
-                    "normalization_version": NORMALIZATION_VERSION,
-                    "content_hash": document_id,
-                },
-            }
             normalized_documents_contents.append(
-                NormalizedContent(processed_file_information, has_section)
+                NormalizedContent(
+                    normalized_text,
+                    has_section,
+                    self.__create_normalized_content_meta_data(
+                        document_id,
+                        file_path,
+                        file_type,
+                        ingestion_time,
+                        NORMALIZATION_VERSION,
+                        content_id,
+                    ),
+                )
             )
 
         return normalized_documents_contents
