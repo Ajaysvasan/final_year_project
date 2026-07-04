@@ -1,4 +1,5 @@
 import diskannpy as dann
+import numpy as np
 
 from config import Config
 
@@ -43,7 +44,7 @@ class VectorDb_diskann:
     def __insert_vector(self, vector, vector_id):
         try:
             self.dynamic_dann.insert(vector, vector_id)
-        except:
+        except Exception as e:
             raise VectorInsertionError(vector_id)
 
     def __insert_vectors(self, vectors, vector_ids):
@@ -71,14 +72,15 @@ class VectorDb_diskann:
 
         print("Insertion done")
 
-    def __search_vector(self, query, k_neighbors, complexity):
-        pass
+    def search_vector(self, query, k_neighbors, complexity):
+        return self.dynamic_dann.search(
+            query=query, k_neighbors=k_neighbors, complexity=complexity
+        )
 
-    def __batch_search_vector(self):
-        pass
-
-    def search(self, id):
-        pass
+    def batch_search_vector(self, queries, k_neighbors, complexity):
+        return self.dynamic_dann.batch_search(
+            queries, k_neighbors, complexity, self.num_threads
+        )
 
     def save(self, save_path=Config.INDEX_PATH):
         self.dynamic_dann.save(save_path)
