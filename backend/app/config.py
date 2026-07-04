@@ -17,6 +17,7 @@ class Config:
     DB_PATH = "hierarchical_db"
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     MODEL_PATH = None
+    INDEX_PATH = "./disk_ann_index"
 
 
 config = Config()
