@@ -1,5 +1,3 @@
-import warnings
-from logging import warning
 from pathlib import Path
 
 import diskannpy as dann
