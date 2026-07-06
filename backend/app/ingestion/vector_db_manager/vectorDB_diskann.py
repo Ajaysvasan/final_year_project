@@ -1,16 +1,14 @@
+import warnings
+from logging import warning
+from pathlib import Path
+
 import diskannpy as dann
-import numpy as np
+from ingestion_exceptions.ingestion_exceptions import (
+    IndexDirectoryDoesNotExists,
+    VectorInsertionError,
+)
 
 from config import Config
-
-
-class VectorInsertionError(Exception):
-    def __init__(self, vector_id):
-        self.vector_id = vector_id
-        super().__init__(self.vector_id)
-
-    def __str__(self):
-        return f"An Error occured while inserting the vector : {self.vector_id}"
 
 
 class VectorDb_diskann:
@@ -23,7 +21,7 @@ class VectorDb_diskann:
         complexity: int,
         graph_degree: int,
         num_threads: int,
-    ):
+    ) -> None:
         self.distance_metrics = distance_metrics
         self.vector_dtype = vector_dtype
         self.dimensions = dimensions
@@ -44,7 +42,7 @@ class VectorDb_diskann:
     def __insert_vector(self, vector, vector_id):
         try:
             self.dynamic_dann.insert(vector, vector_id)
-        except Exception as e:
+        except VectorInsertionError as e:
             raise VectorInsertionError(vector_id)
 
     def __insert_vectors(self, vectors, vector_ids):
@@ -57,20 +55,19 @@ class VectorDb_diskann:
         for vector_id in vector_ids:
             self.__delete(vector_id)
 
-    def delete(self, id, is_delete_all):
-        if is_delete_all:
-            self.__delete_all(id)
-        else:
-            self.__delete(id)
+    def delete_vector(self, id):
+        self.__delete(id)
         self.dynamic_dann.consolidate_delete()
 
-    def insert(self, data, id, is_batch: bool):
-        if is_batch:
-            self.__insert_vectors(data, id)
-        else:
-            self.__insert_vector(data, id)
+    def delete_vectors(self, ids):
+        self.__delete_all(ids)
+        self.dynamic_dann.consolidate_delete()
 
-        print("Insertion done")
+    def insert(self, vector, vector_id):
+        self.__insert_vector(vector, vector_id)
+
+    def batch_insert(self, vectors, vector_ids):
+        self.__insert_vectors(vectors, vector_ids)
 
     def search_vector(self, query, k_neighbors, complexity):
         return self.dynamic_dann.search(
@@ -83,16 +80,24 @@ class VectorDb_diskann:
         )
 
     def save(self, save_path=Config.INDEX_PATH):
-        self.dynamic_dann.save(save_path)
+        path = Path(Config.INDEX_PATH)
+        if path.exists():
+            self.dynamic_dann.save(save_path)
+        else:
+            Path(Config.INDEX_PATH).mkdir(exist_ok=True)
+            self.dynamic_dann.save(save_path)
 
-    def load(self, load_path=Config.INDEX_PATH):
-        return self.dynamic_dann.from_file(
-            index_directory=load_path,
-            max_vectors=self.max_vectors,
-            complexity=self.complexity,
-            graph_degree=self.graph_degree,
-            search_threads=self.num_threads,
-            distance_metric=self.distance_metrics,
-            vector_dtype=self.vector_dtype,
-            dimensions=self.dimensions,
-        )
+    def load(self, load_path=Config.INDEX_PATH) -> dann.DynamicMemoryIndex | None:
+        path = Path(Config.INDEX_PATH)
+        if path.exists():
+            return self.dynamic_dann.from_file(
+                index_directory=load_path,
+                max_vectors=self.max_vectors,
+                complexity=self.complexity,
+                graph_degree=self.graph_degree,
+                search_threads=self.num_threads,
+                distance_metric=self.distance_metrics,
+                vector_dtype=self.vector_dtype,
+                dimensions=self.dimensions,
+            )
+        raise IndexDirectoryDoesNotExists(Config.INDEX_PATH)

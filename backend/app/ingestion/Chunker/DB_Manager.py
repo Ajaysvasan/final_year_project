@@ -1,18 +1,9 @@
 import sqlite3
 from typing import List
 
+from ingestion_exceptions.ingestion_exceptions import InsertionError
+
 from ingestion.nodes.nodes import Context, Document, HChunk, Section
-
-
-class InsertionError(Exception):
-    def __init__(self, error, tableName, id) -> None:
-        self.error = error
-        self.message = tableName
-        self.id = id
-        super().__init__(self.error)
-
-    def __str__(self):
-        return f"{self.error}:Error occured while inserting values in the following table {self.message} , for the id : {self.id}"
 
 
 class Manager:

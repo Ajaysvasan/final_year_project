@@ -1,19 +1,11 @@
 from typing import List
 
+from ingestion_exceptions.ingestion_exceptions import InvalidEmbeddingArgument
 from sentence_transformers import SentenceTransformer
 
 from config import Config
 from ingestion.metadata.metadata import EmbeddedChunkMetaData
 from ingestion.nodes.nodes import EmbeddedChunk, HChunk, RChunk
-
-
-class InvalidEmbeddingArgument(Exception):
-    def __init__(self, error_message) -> None:
-        self.error_message = error_message
-        super().__init__(error_message)
-
-    def __str__(self):
-        return self.error_message
 
 
 class EmbeddingManager:

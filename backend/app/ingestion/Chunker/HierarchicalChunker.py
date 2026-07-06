@@ -161,7 +161,7 @@ class HierarchicalChunker:
         h_manager.insert_chunks(chunks)
         return chunks
 
-    def process_doc(self):
+    def process_doc(self) -> List[HChunk]:
         docObjs = self.__make_document_objs()
         h_manager = Manager(self.db_path, is_chunker_type_hierarchical=True)
         h_manager.insert_documents(docObjs)

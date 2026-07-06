@@ -1,7 +1,7 @@
 from typing import List, Tuple
 
 from config import Config
-from ingestion.nodes.nodes import NormalizedContent
+from ingestion.nodes.nodes import HChunk, NormalizedContent, RChunk
 
 from .HierarchicalChunker import HierarchicalChunker
 from .RecursiveChunker import RecursiveChunker
@@ -16,13 +16,15 @@ class Chunker:
     #  No return statement as the values are stored in the Db
     def _call_hierarchical_chunker(
         self, hierarchical_chunker_list: List[NormalizedContent]
-    ):
+    ) -> List[HChunk]:
         hierarchical_chunker = HierarchicalChunker(
             self.overlap, self.chunk_size, self.db_path, hierarchical_chunker_list
         )
         return hierarchical_chunker.process_doc()
 
-    def __call_recursive_chunker(self, recursive_chunker_list: List[NormalizedContent]):
+    def __call_recursive_chunker(
+        self, recursive_chunker_list: List[NormalizedContent]
+    ) -> List[RChunk]:
         recursive_chunker = RecursiveChunker(
             recursive_chunker_list, self.chunk_size, self.overlap
         )
@@ -40,7 +42,9 @@ class Chunker:
                 recursive_chunker_list.append(content)
         return hierarchical_chunker_list, recursive_chunker_list
 
-    def chunk_per_document(self, normalised_content: List[NormalizedContent]):
+    def chunk_per_document(
+        self, normalised_content: List[NormalizedContent]
+    ) -> Tuple[List[HChunk], List[RChunk]]:
         hierarchical_chunker_list, recursive_chunker_list = (
             self.__hierarchical_and_recursive_objects(normalised_content)
         )

@@ -19,5 +19,3 @@ dann = vdap(
     graph_degree=120,
     num_threads=2,
 )
-
-dann.insert(data, id, is_batch=True)
