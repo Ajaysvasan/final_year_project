@@ -1,11 +1,11 @@
 from typing import List
 
-from ingestion_exceptions.ingestion_exceptions import InvalidEmbeddingArgument
+from datalayer_exceptions.datalayer_exceptions import InvalidEmbeddingArgument
+from ingestion.metadata.metadata import EmbeddedChunkMetaData
+from ingestion.nodes.nodes import EmbeddedChunk, HChunk, RChunk
 from sentence_transformers import SentenceTransformer
 
 from config import Config
-from ingestion.metadata.metadata import EmbeddedChunkMetaData
-from ingestion.nodes.nodes import EmbeddedChunk, HChunk, RChunk
 
 
 class EmbeddingManager:

@@ -1,3 +1,12 @@
+class InvalidFileType(Exception):
+    def __init__(self, file_extention) -> None:
+        self.file_extention = file_extention
+        super().__init__(file_extention)
+
+    def __str__(self):
+        return f"Unsupported file type : {self.file_extention}"
+
+
 class VectorInsertionError(Exception):
     def __init__(self, vector_id):
         self.vector_id = vector_id

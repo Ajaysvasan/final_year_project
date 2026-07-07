@@ -4,8 +4,7 @@ from typing import Dict, List
 
 
 class FileLoader:
-    def __init__(self, folder_path: str):
-        self.folder_path = folder_path
+    def __init__(self):
         self.allowed_extensions = {
             ".doc",
             ".docx",
@@ -45,27 +44,13 @@ class FileLoader:
         except Exception as e:
             print(f"Error scanning directory {path}: {e}")
 
-    def load_files(self) -> Dict[str, List[Path]]:
-        if not os.path.exists(self.folder_path):
-            raise ValueError(f"The provided path '{self.folder_path}' does not exist.")
-        if not self.__is_directory(self.folder_path):
-            raise ValueError(
-                f"The provided path '{self.folder_path}' is not a directory."
-            )
+    def load_files(self, folder_path) -> Dict[str, List[Path]]:
+        if not os.path.exists(folder_path):
+            raise ValueError(f"The provided path '{folder_path}' does not exist.")
+        if not self.__is_directory(folder_path):
+            raise ValueError(f"The provided path '{folder_path}' is not a directory.")
 
         loaded_files = {ext[1:]: [] for ext in self.allowed_extensions}
 
-        self.__scan_directory(self.folder_path, loaded_files)
+        self.__scan_directory(folder_path, loaded_files)
         return loaded_files
-
-
-if __name__ == "__main__":
-    folder_path = "folde/path"
-    file_loader = FileLoader(folder_path)
-
-    try:
-        files = file_loader.load_files()
-        for category, file_list in files.items():
-            print(f"{category}: {len(file_list)} files found")
-    except ValueError as e:
-        print(e)

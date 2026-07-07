@@ -11,3 +11,4 @@ textract
 pyPDF2
 sentence-transformers
 diskannpy
+

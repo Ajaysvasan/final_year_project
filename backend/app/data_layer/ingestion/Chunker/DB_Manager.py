@@ -1,8 +1,7 @@
 import sqlite3
 from typing import List
 
-from ingestion_exceptions.ingestion_exceptions import InsertionError
-
+from datalayer_exceptions.datalayer_exceptions import InsertionError
 from ingestion.nodes.nodes import Context, Document, HChunk, Section
 
 

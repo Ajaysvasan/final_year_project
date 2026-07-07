@@ -1,8 +1,8 @@
 import hashlib
 from typing import List
 
-from ingestion.metadata.metadata import ChunkMetaData
-from ingestion.nodes.nodes import NormalizedContent, RChunk
+from metadata.metadata import ChunkMetaData
+from nodes.nodes import NormalizedContent, RChunk
 
 
 class RecursiveChunker:

@@ -3,7 +3,7 @@ import re
 from typing import List
 
 from ingestion.metadata.metadata import ChunkMetaData
-from ingestion.nodes.nodes import Context, Document, HChunk, NormalizedContent, Section
+from nodes.nodes import Context, Document, HChunk, NormalizedContent, Section
 
 from .DB_Manager import Manager
 
@@ -167,7 +167,7 @@ class HierarchicalChunker:
         h_manager.insert_documents(docObjs)
         chunks = []
         for docObj in docObjs:
-            chunks.append(self.__chunk_text(docObj, h_manager))
+            chunks.extend(self.__chunk_text(docObj, h_manager))
 
         h_manager.close()
         return chunks

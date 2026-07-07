@@ -4,8 +4,8 @@ from datetime import datetime, timezone
 from pathlib import Path
 from typing import Dict, List
 
-from ingestion.metadata.metadata import NormalizedTextMetaData
-from ingestion.nodes.nodes import NormalizedContent
+from metadata.metadata import NormalizedTextMetaData
+from nodes.nodes import NormalizedContent
 
 NORMALIZATION_VERSION = "rag_v1"
 
@@ -83,10 +83,30 @@ class TextNormalizer:
             sections.append(sectionName)
         return sections
 
+    def __create_normalized_content_meta_data(
+        self,
+        document_id,
+        source_file,
+        file_type,
+        ingestion_time,
+        normalization_version,
+        content_hash,
+    ):
+        file_name = Path(source_file).name
+        return NormalizedTextMetaData(
+            document_id,
+            source_file,
+            file_name,
+            file_type,
+            ingestion_time,
+            normalization_version,
+            content_hash,
+        )
+
     def _has_section(self, normalizedText):
         return len(self.__find_section_names(normalizedText)) != 0
 
-    def normalize_text(self, text: str) -> str:
+    def __process_text(self, text: str) -> str:
         if not text:
             return ""
 
@@ -118,24 +138,25 @@ class TextNormalizer:
 
         return text
 
-    def __create_normalized_content_meta_data(
-        self,
-        document_id,
-        source_file,
-        file_type,
-        ingestion_time,
-        normalization_version,
-        content_hash,
-    ):
-        file_name = Path(source_file).name
-        return NormalizedTextMetaData(
-            document_id,
-            source_file,
-            file_name,
-            file_type,
-            ingestion_time,
-            normalization_version,
-            content_hash,
+    def normalize_text(self, file_path, text) -> NormalizedContent:
+        file_name = Path(file_path).name
+        file_type = Path(file_path).suffix.lower()
+        ingestion_time = datetime.now(timezone.utc).isoformat()
+        normalized_text = self.__process_text(text)
+        document_id = self.__generate_document_id(file_name, file_path, normalized_text)
+        content_id = self.__generate_content_id(normalized_text)
+        has_section = self._has_section(normalized_text)
+        return NormalizedContent(
+            content=normalized_text,
+            has_section=has_section,
+            meta_data=self.__create_normalized_content_meta_data(
+                document_id,
+                file_path,
+                file_type,
+                ingestion_time,
+                NORMALIZATION_VERSION,
+                content_id,
+            ),
         )
 
     def normalize_all(self, extracted_texts: Dict[str, str]) -> List[NormalizedContent]:
@@ -144,7 +165,7 @@ class TextNormalizer:
             file_name = Path(file_path).name
             file_type = Path(file_path).suffix.lower()
             ingestion_time = datetime.now(timezone.utc).isoformat()
-            normalized_text = self.normalize_text(text)
+            normalized_text = self.__process_text(text)
             document_id = self.__generate_document_id(
                 file_name, file_path, normalized_text
             )

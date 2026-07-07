@@ -1,7 +1,7 @@
 from pathlib import Path
 
 import diskannpy as dann
-from ingestion_exceptions.ingestion_exceptions import (
+from datalayer_exceptions.datalayer_exceptions import (
     IndexDirectoryDoesNotExists,
     VectorInsertionError,
 )

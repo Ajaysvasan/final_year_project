@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
-from typing import Dict
+from typing import Dict, Tuple
+
+from datalayer_exceptions.datalayer_exceptions import InvalidFileType
 
 
 class TextExtractor:
@@ -80,26 +82,27 @@ class TextExtractor:
 
         return "\n".join(text)
 
-    def extract_text_from_file(self, file_path: str) -> str:
+    def extract_text_from_file(self, file_path: str) -> Tuple[str, str]:
         if not os.path.exists(file_path):
             print(f"Error: File does not exist: {file_path}")
-            return ""
+            raise FileNotFoundError
 
         extension = Path(file_path).suffix.lower()
 
         if extension == ".txt":
-            return self._extract_from_txt(file_path)
+            extracted_text = self._extract_from_txt(file_path)
         elif extension == ".docx":
-            return self._extract_from_docx(file_path)
+            extracted_text = self._extract_from_docx(file_path)
         elif extension == ".doc":
-            return self._extract_from_doc(file_path)
+            extracted_text = self._extract_from_doc(file_path)
         elif extension == ".pdf":
-            return self._extract_from_pdf(file_path)
+            extracted_text = self._extract_from_pdf(file_path)
         elif extension == ".md":
-            return self.__extract_text_from_md(file_path)
+            extracted_text = self.__extract_text_from_md(file_path)
         else:
-            print(f"Unsupported file type: {extension}")
-            return ""
+            raise InvalidFileType(file_extention=extension)
+
+        return file_path, extracted_text
 
     def extract_all(self, loaded_files: Dict[str, list]) -> Dict[str, str]:
         extracted_texts = {}

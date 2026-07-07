@@ -1,6 +1,8 @@
 import os
 from pathlib import Path
 
+import numpy as np
+
 
 class Config:
     """
@@ -18,6 +20,14 @@ class Config:
     EMBEDDING_MODEL = "sentence-transformers/all-MiniLM-L6-v2"
     MODEL_PATH = None
     INDEX_PATH = "./disk_ann_index"
+    DISTANCE_METRIC = "l2"
+    VECTOR_DTYPE = np.float32
+    DIMENSIONS = 128
+    MAX_VECTORS = 1000000
+    COMPLEXITY = 100
+    GRPAH_DEGREE = 120
+    NUM_THREADS = 4
+    K_NEIGHBORS = 9
 
 
 config = Config()

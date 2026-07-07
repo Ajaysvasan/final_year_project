@@ -1,19 +1,19 @@
-from typing import List
+from typing import List, Type, Union
 from warnings import warn
 
-from ingestion_exceptions.ingestion_exceptions import IndexDirectoryDoesNotExists
+import numpy
+from datalayer_exceptions.datalayer_exceptions import IndexDirectoryDoesNotExists
+from ingestion.nodes.nodes import EmbeddedChunk
 from vectorDB_diskann import VectorDb_diskann as vdap
 
 from config import Config
-
-from ..nodes.nodes import EmbeddedChunk
 
 
 class VectorDbManager:
     def __init__(
         self,
         distance_metrics: str,
-        vector_dtype: int,
+        vector_dtype: Union[Type[numpy.float32], Type[numpy.int8], Type[numpy.uint8]],
         dimensions: int,
         max_vectors: int,
         complexity: int,
