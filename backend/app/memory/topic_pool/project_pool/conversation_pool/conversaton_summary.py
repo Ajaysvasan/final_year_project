@@ -1,0 +1,2 @@
+class ConversationSummary:
+    pass
