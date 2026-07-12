@@ -28,6 +28,9 @@ class Config:
     GRPAH_DEGREE = 120
     NUM_THREADS = 4
     K_NEIGHBORS = 9
+    CONVERSATION_SNAPSHOT_DB = (
+        "memory/topic_pool/project_pool/conversation_pool/conversation_snapshot.db"
+    )
 
 
 config = Config()

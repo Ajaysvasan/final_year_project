@@ -17,19 +17,19 @@ class SnapShot:
 
     def __add_snap_shot(
         self,
+        snapshot_id,
         time_of_snapshot: str,
         size_of_the_summary: int,
         len_of_the_summary: int,
-        summary_index: int,
         summary_vector_ids: List,
         conversation_id: str,
         cummulative_summary_vector_id: uint32,
     ) -> None:
         snap_shot = SnapShotNode(
+            snapshot_id,
             time_of_snapshot,
             size_of_the_summary,
             len_of_the_summary,
-            summary_index,
             summary_vector_ids,
             conversation_id,
             cummulative_summary_vector_id,
@@ -38,10 +38,10 @@ class SnapShot:
 
     def add(
         self,
+        snapshot_id: str,
         time_of_snapshot: str,
         size_of_the_summary: int,
         len_of_the_summary: int,
-        summary_index: int,
         summary_vector_ids: List,
         conversation_id: str,
         cummulative_summary_vector_id: uint32,
@@ -49,10 +49,10 @@ class SnapShot:
         reset_left_pointer: bool = True,
     ):
         self.__add_snap_shot(
+            snapshot_id,
             time_of_snapshot,
             size_of_the_summary,
             len_of_the_summary,
-            summary_index,
             summary_vector_ids,
             conversation_id,
             cummulative_summary_vector_id,
@@ -103,7 +103,7 @@ class SnapShot:
             while self.__left_cursor <= self.__right_cursor:
                 left_snap = self.__snap_shot_list[self.__left_cursor]
                 right_snap = self.__snap_shot_list[self.__right_cursor]
-                # some db logics goes here which are to be implemented
+                # some logics
                 right_snap_vector_cummulative = tensor([])
                 left_snap_vector_cummulative = tensor([])
                 left_sim = cosine_similarity(
