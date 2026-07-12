@@ -19,4 +19,4 @@ class SnapShotNode:
 
     conversation_id: str
 
-    cummulative_summary_vector_id: uint32
+    cumulative_summary_vector_id: uint32

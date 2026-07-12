@@ -23,7 +23,7 @@ class SnapShot:
         len_of_the_summary: int,
         summary_vector_ids: List,
         conversation_id: str,
-        cummulative_summary_vector_id: uint32,
+        cumulative_summary_vector_id: uint32,
     ) -> None:
         snap_shot = SnapShotNode(
             snapshot_id,
@@ -32,7 +32,7 @@ class SnapShot:
             len_of_the_summary,
             summary_vector_ids,
             conversation_id,
-            cummulative_summary_vector_id,
+            cumulative_summary_vector_id,
         )
         self.__snap_shot_list.append(snap_shot)
 
@@ -44,7 +44,7 @@ class SnapShot:
         len_of_the_summary: int,
         summary_vector_ids: List,
         conversation_id: str,
-        cummulative_summary_vector_id: uint32,
+        cumulative_summary_vector_id: uint32,
         reset_right_pointer: bool = True,
         reset_left_pointer: bool = True,
     ):
@@ -55,7 +55,7 @@ class SnapShot:
             len_of_the_summary,
             summary_vector_ids,
             conversation_id,
-            cummulative_summary_vector_id,
+            cumulative_summary_vector_id,
         )
         if self.__left_cursor == -1 and self.__right_cursor == -1:
             self.__left_cursor = self.__right_cursor = 0
@@ -104,13 +104,13 @@ class SnapShot:
                 left_snap = self.__snap_shot_list[self.__left_cursor]
                 right_snap = self.__snap_shot_list[self.__right_cursor]
                 # some logics
-                right_snap_vector_cummulative = tensor([])
-                left_snap_vector_cummulative = tensor([])
+                right_snap_vector_cumulative = tensor([])
+                left_snap_vector_cumulative = tensor([])
                 left_sim = cosine_similarity(
-                    left_snap_vector_cummulative, tensor(query)
+                    left_snap_vector_cumulative, tensor(query)
                 )
                 right_sim = cosine_similarity(
-                    right_snap_vector_cummulative, tensor(query)
+                    right_snap_vector_cumulative, tensor(query)
                 )
 
                 if left_sim > best_similarity:
@@ -130,3 +130,4 @@ class SnapShot:
 
     def search(self, query: List):
         return self.__snap_shot_list[self.__find_best_snapshot(query)]
+
