@@ -5,20 +5,10 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-from app.config import Config
+from app.config import Config, get_logger
 from cli.cli_interface import cli_interface
 
-logging.basicConfig(
-    level=logging.INFO,
-    format="%(asctime)s - %(name)s - %(levelname)s - %(message)s",
-    handlers=[
-        logging.StreamHandler(sys.stdout),
-        logging.FileHandler(
-            Config.LOG_FILE, encoding="utf-8"
-        ),  # Uncomment to log to a file
-    ],
-)
-logger = logging.getLogger("backend_main")
+logger = get_logger("backend_main")
 
 
 def parse_arguments():
@@ -45,7 +35,9 @@ def main():
 
     # Adjust log level if verbose is set
     if args.verbose:
-        logging.getLogger().setLevel(logging.DEBUG)
+        logger.setLevel(logging.DEBUG)
+        for h in logger.handlers:
+            h.setLevel(logging.DEBUG)
         logger.debug("Verbose logging enabled.")
 
     logger.info(f"Initializing {Config.APP_NAME}...")

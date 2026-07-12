@@ -1,15 +1,17 @@
 from typing import List, Type, Union
-from warnings import warn
 
 import numpy
 from datalayer_exceptions.datalayer_exceptions import IndexDirectoryDoesNotExists
 from ingestion.nodes.nodes import EmbeddedChunk
 from vectorDB_diskann import VectorDb_diskann as vdap
 
-from config import Config
+from config import Config, get_logger
+
+logger = get_logger(__name__)
 
 
 class VectorDbManager:
+
     def __init__(
         self,
         distance_metrics: str,
@@ -29,6 +31,7 @@ class VectorDbManager:
         self.graph_degree = graph_degree
         self.num_threads = num_threads
         self.k_neighbors = k_neighbors
+        logger.info(f"Initializing VectorDbManager (distance={distance_metrics}, dims={dimensions}, max_vectors={max_vectors}, threads={num_threads})")
         self.vector_db = vdap(
             self.distance_metrics,
             self.vector_dtype,
@@ -48,6 +51,7 @@ class VectorDbManager:
     def insert(self, embedded_chunk_obj: EmbeddedChunk) -> None:
         vector = embedded_chunk_obj.vector
         vector_id = embedded_chunk_obj.meta_data.chunk_id
+        logger.debug(f"Inserting vector chunk_id='{vector_id}'")
         self.__insert_vector(vector, vector_id)
 
     def batch_insert(self, embedded_chunk_objs: List[EmbeddedChunk]):
@@ -56,7 +60,9 @@ class VectorDbManager:
         for embedded_chunk_obj in embedded_chunk_objs:
             vectors.append(embedded_chunk_obj.vector)
             vector_ids.append(embedded_chunk_obj.meta_data.chunk_id)
+        logger.info(f"Batch inserting {len(vector_ids)} vectors into index...")
         self.__insert_vectors_in_batch(vectors, vector_ids)
+
 
     def search_vector(self, query):
         return self.vector_db.search_vector(query, self.k_neighbors, self.complexity)
@@ -74,13 +80,19 @@ class VectorDbManager:
         self.vector_db.delete_vectors(vector_ids)
 
     def save(self, save_path=Config.INDEX_PATH):
+        logger.info(f"Saving VectorDbManager index to path '{save_path}'...")
         self.vector_db.save(save_path)
+        logger.info("VectorDbManager index saved successfully.")
 
     def load(self, load_path=Config.INDEX_PATH):
         try:
-            return self.vector_db.load(load_path)
+            logger.info(f"Loading VectorDbManager index from path '{load_path}'...")
+            idx = self.vector_db.load(load_path)
+            logger.info("VectorDbManager index loaded successfully.")
+            return idx
         except IndexDirectoryDoesNotExists:
-            warn(
-                f"No directory {load_path} exists , please ensure to enter in the correct path. Returning None"
+            logger.warning(
+                f"Index directory '{load_path}' does not exist. Returning None."
             )
             return None
+
