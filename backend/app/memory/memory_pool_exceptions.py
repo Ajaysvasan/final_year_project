@@ -16,3 +16,13 @@ class NullPointerException(Exception):
 
     def __str__(self) -> str:
         return self.error_message
+
+
+class InvalidVectorDimension(Exception):
+    def __init__(self, invalid_dimension, expected_dimension):
+        self.expected_dimension = expected_dimension
+        self.dimension = invalid_dimension
+        super().__init__(self.dimension, self.expected_dimension)
+
+    def __str__(self) -> str:
+        return f"Got the dimension {self.dimension}. Expected the dimension {self.expected_dimension}"

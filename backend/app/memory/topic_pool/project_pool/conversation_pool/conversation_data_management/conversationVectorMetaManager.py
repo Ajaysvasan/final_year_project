@@ -5,7 +5,7 @@ from typing import List, Optional, Union
 import numpy as np
 
 try:
-    from .snapShotNodes import SnapShotNode
+    from snapShotNodes import SnapShotNode
 except ImportError:
     from snapShotNodes import SnapShotNode
 
@@ -22,7 +22,9 @@ class ConversationVectorMetaDataManager:
         if db_dir:
             os.makedirs(db_dir, exist_ok=True)
 
-        logger.info(f"Initializing ConversationVectorMetaDataManager with DB: '{self.db_path}'")
+        logger.info(
+            f"Initializing ConversationVectorMetaDataManager with DB: '{self.db_path}'"
+        )
         self.conn = sqlite3.connect(self.db_path)
         self.cursor = self.conn.cursor()
         self.conn.execute("PRAGMA foreign_keys = ON")
@@ -185,7 +187,9 @@ class ConversationVectorMetaDataManager:
         Inserts a SnapShotNode and its vector IDs into the database.
         Returns the snapshot_id from the SnapShotNode.
         """
-        logger.info(f"Inserting snapshot metadata: snapshot_id='{snapshot_node.snapshot_id}', conversation_id='{snapshot_node.conversation_id}'")
+        logger.info(
+            f"Inserting snapshot metadata: snapshot_id='{snapshot_node.snapshot_id}', conversation_id='{snapshot_node.conversation_id}'"
+        )
         return self.__insert_snapshot_metadata(snapshot_node, topic_id, project_id)
 
     def load_snap_shot_objects(self, conversation_id: str) -> List[SnapShotNode]:
@@ -265,10 +269,14 @@ class ConversationVectorMetaDataManager:
             "SELECT 1 FROM conversation_snapshots WHERE snapshot_id = ?", (snapshot_id,)
         )
         if not self.cursor.fetchone():
-            logger.error(f"Failed to insert vector IDs: snapshot '{snapshot_id}' does not exist.")
+            logger.error(
+                f"Failed to insert vector IDs: snapshot '{snapshot_id}' does not exist."
+            )
             raise ValueError(f"Snapshot with ID '{snapshot_id}' does not exist.")
 
-        logger.debug(f"Inserting {len(vector_ids)} vector IDs for snapshot '{snapshot_id}'")
+        logger.debug(
+            f"Inserting {len(vector_ids)} vector IDs for snapshot '{snapshot_id}'"
+        )
         self.__insert_vector_ids(snapshot_id, vector_ids)
 
     def insert_cumulative_summary_offset(
@@ -282,10 +290,14 @@ class ConversationVectorMetaDataManager:
             "SELECT 1 FROM conversation_snapshots WHERE snapshot_id = ?", (snapshot_id,)
         )
         if not self.cursor.fetchone():
-            logger.error(f"Failed to insert cumulative summary offset: snapshot '{snapshot_id}' does not exist.")
+            logger.error(
+                f"Failed to insert cumulative summary offset: snapshot '{snapshot_id}' does not exist."
+            )
             raise ValueError(f"Snapshot with ID '{snapshot_id}' does not exist.")
 
-        logger.debug(f"Inserting cumulative summary offset {file_offset} for snapshot '{snapshot_id}'")
+        logger.debug(
+            f"Inserting cumulative summary offset {file_offset} for snapshot '{snapshot_id}'"
+        )
         self.__insert_cumulative_summary_offset(snapshot_id, int(file_offset))
 
     def get_latest_cumulative_summary_vector_id(
@@ -325,4 +337,3 @@ class ConversationVectorMetaDataManager:
 
 
 ConversationVectorManager = ConversationVectorMetaDataManager
-
