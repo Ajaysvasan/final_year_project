@@ -1,9 +1,8 @@
-import os
 import logging
+import os
 from pathlib import Path
 
 import numpy as np
-
 
 
 class Config:
@@ -34,6 +33,9 @@ class Config:
         "memory/topic_pool/project_pool/conversation_pool/conversation_snapshot.db"
     )
 
+    SUMMARY_PATH = r"memory/topic_pool/project_pool/conversation_pool/conversation_vectors/summary_vectors/"
+    CUMMULATIVE_VECTOR_PATH = "memory/topic_pool/project_pool/conversation_pool/conversation_vectors/cummulative_vector/"
+
 
 config = Config()
 
@@ -47,7 +49,11 @@ def get_logger(name: str) -> logging.Logger:
     if not logger.handlers:
         # Ensure log directory exists
         base_dir = os.path.dirname(os.path.abspath(__file__))
-        log_file_path = os.path.join(base_dir, Config.LOG_FILE) if not os.path.isabs(Config.LOG_FILE) else Config.LOG_FILE
+        log_file_path = (
+            os.path.join(base_dir, Config.LOG_FILE)
+            if not os.path.isabs(Config.LOG_FILE)
+            else Config.LOG_FILE
+        )
         log_dir = os.path.dirname(log_file_path)
         if log_dir:
             os.makedirs(log_dir, exist_ok=True)
