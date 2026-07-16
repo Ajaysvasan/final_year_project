@@ -8,7 +8,7 @@ import numpy as np
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
 from config import Config
-from memory.topic_pool.project_pool.conversation_pool.conversationVectorManager import (
+from memory.topic_pool.project_pool.conversation_pool.conversation_data_management.conversationVectorMetaManager import (
     ConversationVectorMetaDataManager,
 )
 from memory.topic_pool.project_pool.conversation_pool.snapShotNodes import SnapShotNode
